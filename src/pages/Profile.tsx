@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Trophy, Flame, Zap, Star, ArrowLeft, Lock, Brain, Swords,
   Code2, BookOpen, Target, TrendingUp, Crown, Medal, Calendar,
-  CheckCircle, BarChart3
+  CheckCircle, BarChart3, Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useXP, ACHIEVEMENTS, getLevelTitle, getXPForCurrentLevel, XP_PER_LEVEL } from '@/contexts/XPContext';
@@ -144,10 +144,16 @@ const Profile = () => {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <p className="font-black text-sm">Profile & Stats</p>
-          <button onClick={() => navigate('/leaderboard')}
-            className="ml-auto flex items-center gap-1.5 text-xs font-black text-yellow-500 bg-yellow-500/10 rounded-xl px-3 py-1.5 hover:bg-yellow-500/20 transition-colors">
-            <Crown className="w-3.5 h-3.5" /> Leaderboard
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            <button onClick={() => navigate('/about')}
+              className="flex items-center gap-1.5 text-xs font-black text-violet-400 bg-violet-500/10 rounded-xl px-3 py-1.5 hover:bg-violet-500/20 transition-colors">
+              <Info className="w-3.5 h-3.5" /> About
+            </button>
+            <button onClick={() => navigate('/leaderboard')}
+              className="flex items-center gap-1.5 text-xs font-black text-yellow-500 bg-yellow-500/10 rounded-xl px-3 py-1.5 hover:bg-yellow-500/20 transition-colors">
+              <Crown className="w-3.5 h-3.5" /> Leaderboard
+            </button>
+          </div>
         </div>
       </div>
 
