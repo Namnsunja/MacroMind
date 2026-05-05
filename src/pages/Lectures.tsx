@@ -1,4 +1,26 @@
-import { useState } from 'react';
+/**
+ * Lectures.tsx
+ *
+ * AdMob Integration Notes:
+ * ─────────────────────────────────────────────────────────────────────────────
+ * INTERSTITIAL AD — shown after every 2 lecture generations (not mid-lesson).
+ * The ad fires AFTER content is fully displayed so it never interrupts learning.
+ *
+ * INTERSTITIAL AD UNIT ID (TEST):  ca-app-pub-3940256099942544/1033173712
+ * TODO: Replace with your real Interstitial Ad Unit ID before publishing.
+ *
+ * In Android Studio (Capacitor):
+ *   AdMob.showInterstitial({ adId: INTERSTITIAL_AD_UNIT_ID })
+ * Call it inside the `showPostLectureAd()` function below.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+// ── MARK: AdMob Ad Unit IDs ────────────────────────────────────────────────
+// TODO: Replace test ID with your real AdMob Interstitial ID before publishing
+const INTERSTITIAL_AD_UNIT_ID = 'ca-app-pub-3940256099942544/1033173712'; // TEST — REPLACE
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   GraduationCap, Loader2, BookOpen, ArrowLeft, Zap, ChevronDown, ChevronUp,
@@ -43,10 +65,29 @@ const Lectures = () => {
   const [modelUsed, setModelUsed] = useState('');
   const [openHint, setOpenHint] = useState<number | null>(null);
   const [openSol, setOpenSol] = useState<number | null>(null);
-  const [showAd, setShowAd] = useState(false);
+  const [showDeepDiveAd, setShowDeepDiveAd] = useState(false);
+  const [showInterstitial, setShowInterstitial] = useState(false);
   const navigate = useNavigate();
   const { addXP, unlockAchievement } = useXP();
   const { speak, stop, pause, resume, speaking, paused } = useTTS();
+
+  // Track lecture count for interstitial (every 2 generations)
+  // MARK: Interstitial trigger counter
+  const lectureCountRef = useRef(0);
+
+  /**
+   * showPostLectureAd — fires AFTER lecture is rendered (non-interrupting).
+   *
+   * TODO (Android Studio): replace the setShowInterstitial(true) call below with:
+   *   AdMob.showInterstitial({ adId: INTERSTITIAL_AD_UNIT_ID })
+   *
+   * The web fallback shows a rewarded-style modal so the flow is testable.
+   */
+  const showPostLectureAd = () => {
+    // TODO: AdMob.showInterstitial({ adId: INTERSTITIAL_AD_UNIT_ID })
+    // Using in-app modal as web simulation — replace with native call above
+    setShowInterstitial(true);
+  };
 
   const doGenerate = async () => {
     setLoading(true);
@@ -64,6 +105,13 @@ const Lectures = () => {
       addXP(45, `${depth} lecture`);
       unlockAchievement('first_lecture');
       toast.success('Lecture ready! 🎓');
+
+      // MARK: Interstitial — trigger every 2 completed lecture generations
+      lectureCountRef.current += 1;
+      if (lectureCountRef.current % 2 === 0) {
+        // Small delay so user sees the lecture content first
+        setTimeout(() => showPostLectureAd(), 800);
+      }
     } catch (e: any) {
       toast.error(e.message || 'Failed to generate lecture');
     } finally {
@@ -73,7 +121,8 @@ const Lectures = () => {
 
   const handleGenerate = () => {
     if (!subject || !topic) { toast.error('Pick subject and topic!'); return; }
-    if (depth === 'Deep Dive') { setShowAd(true); return; }
+    // Deep Dive requires a rewarded ad to unlock
+    if (depth === 'Deep Dive') { setShowDeepDiveAd(true); return; }
     doGenerate();
   };
 
@@ -85,11 +134,23 @@ const Lectures = () => {
 
   return (
     <div className="min-h-screen bg-background pb-8">
-      {showAd && (
+
+      {/* Rewarded Ad Gate — only for Deep Dive lectures */}
+      {showDeepDiveAd && (
         <AdGate
           reason="Deep Dive lectures are premium — watch a short ad to unlock!"
-          onComplete={() => { setShowAd(false); doGenerate(); }}
-          onClose={() => setShowAd(false)}
+          onComplete={() => { setShowDeepDiveAd(false); doGenerate(); }}
+          onClose={() => setShowDeepDiveAd(false)}
+        />
+      )}
+
+      {/* Post-Lecture Interstitial (every 2 generations, shown AFTER content loads) */}
+      {/* MARK: Interstitial Ad Modal — replace with native AdMob call in Android Studio */}
+      {showInterstitial && (
+        <AdGate
+          reason="Thanks for using MacroMind! Quick ad before you continue."
+          onComplete={() => setShowInterstitial(false)}
+          onClose={() => setShowInterstitial(false)}
         />
       )}
 
